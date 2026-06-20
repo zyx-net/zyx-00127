@@ -1,6 +1,13 @@
-import { db } from './init';
+import { db as defaultDb } from './init';
+import type { Database } from 'sqlite3';
 
-export const run = (sql: string, params: unknown[] = []): Promise<{ lastID: number; changes: number }> => {
+let db: Database = defaultDb as unknown as Database;
+
+export const setDb = (newDb: Database): void => {
+  db = newDb;
+};
+
+export const run = (sql: string, params: unknown[] = [] ): Promise<{ lastID: number; changes: number }> => {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {
       if (err) reject(err);
