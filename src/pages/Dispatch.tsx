@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Form,
   Select,
@@ -52,7 +52,7 @@ export const Dispatch: React.FC = () => {
   const [reassignForm] = Form.useForm<AssignTicketRequest>();
   const [checkingConflict, setCheckingConflict] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [list, techs] = await Promise.all([
@@ -64,11 +64,11 @@ export const Dispatch: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeTab]);
 
   useEffect(() => {
     loadData();
-  }, [activeTab]);
+  }, [loadData]);
 
   const checkConflict = async (
     techId: number,
@@ -371,7 +371,11 @@ export const Dispatch: React.FC = () => {
         <Space>
           <Button
             onClick={() => {
-              isReassign ? setReassignModalOpen(false) : setAssignModalOpen(false);
+              if (isReassign) {
+                setReassignModalOpen(false);
+              } else {
+                setAssignModalOpen(false);
+              }
               setSelectedTicket(null);
             }}
           >

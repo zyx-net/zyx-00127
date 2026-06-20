@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   Tag,
@@ -7,7 +7,6 @@ import {
   Timeline,
   Button,
   Space,
-  Divider,
   Avatar,
   Popconfirm,
   List,
@@ -45,7 +44,7 @@ export const TicketDetail: React.FC = () => {
   const [statusLogs, setStatusLogs] = useState<StatusLog[]>([]);
   const [assignmentLogs, setAssignmentLogs] = useState<AssignmentLog[]>([]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     try {
@@ -56,11 +55,11 @@ export const TicketDetail: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     loadData();
-  }, [id]);
+  }, [loadData]);
 
   const handleComplete = async () => {
     if (!ticket) return;

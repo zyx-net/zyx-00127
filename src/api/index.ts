@@ -2,7 +2,7 @@ import { request, downloadFile } from '../utils/request';
 import {
   LoginRequest, LoginResponse, Ticket, CreateTicketRequest,
   AssignTicketRequest, RepairType, Technician, Shift,
-  StatusLog, AssignmentLog, User
+  StatusLog, AssignmentLog
 } from '../../shared/types';
 
 export const authApi = {
