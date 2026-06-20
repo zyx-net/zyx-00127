@@ -128,7 +128,7 @@ export const Resident: React.FC = () => {
         <Button
           type="link"
           icon={<EyeOutlined />}
-          onClick={() => navigate(`/ticket/${record.id}`)}
+          onClick={() => navigate(`/tickets/${record.id}`)}
         >
           详情
         </Button>

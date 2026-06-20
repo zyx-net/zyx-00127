@@ -254,7 +254,7 @@ export const Dispatch: React.FC = () => {
               type="link"
               size="small"
               icon={<EyeOutlined />}
-              onClick={() => navigate(`/ticket/${record.id}`)}
+              onClick={() => navigate(`/tickets/${record.id}`)}
             >
               详情
             </Button>

@@ -55,6 +55,46 @@ router.get('/:id', async (req: AuthRequest, res) => {
   }
 });
 
+router.get('/:id/status-logs', async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: '未登录' } as ApiResponse);
+      return;
+    }
+    const ticketId = parseInt(req.params.id);
+    const ticket = await getTicketById(ticketId, req.user.id, req.user.role);
+    if (!ticket) {
+      res.status(404).json({ success: false, error: '工单不存在或无权限查看' } as ApiResponse);
+      return;
+    }
+    const logs = await getStatusLogs(ticketId);
+    res.json({ success: true, data: logs } as ApiResponse<typeof logs>);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '获取状态日志失败';
+    res.status(500).json({ success: false, error: message } as ApiResponse);
+  }
+});
+
+router.get('/:id/assignment-logs', async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ success: false, error: '未登录' } as ApiResponse);
+      return;
+    }
+    const ticketId = parseInt(req.params.id);
+    const ticket = await getTicketById(ticketId, req.user.id, req.user.role);
+    if (!ticket) {
+      res.status(404).json({ success: false, error: '工单不存在或无权限查看' } as ApiResponse);
+      return;
+    }
+    const logs = await getAssignmentLogs(ticketId);
+    res.json({ success: true, data: logs } as ApiResponse<typeof logs>);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : '获取派工历史失败';
+    res.status(500).json({ success: false, error: message } as ApiResponse);
+  }
+});
+
 router.post('/', requireRole(['resident']), async (req: AuthRequest, res) => {
   try {
     if (!req.user) {

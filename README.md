@@ -188,20 +188,24 @@ npm run server:dev
 - `GET /api/public/technicians` - 获取技工列表
 
 ### 工单接口
-- `GET /api/tickets` - 获取工单列表（按角色过滤）
-- `GET /api/tickets/:id` - 获取工单详情（带权限检查）
-- `POST /api/tickets` - 创建工单
-- `POST /api/tickets/:id/assign` - 派工/改派
-- `POST /api/tickets/:id/complete` - 标记完工待复核
-- `POST /api/tickets/:id/close` - 复核关闭
+- `GET /api/tickets` - 获取工单列表（按角色过滤，可选 `?status=closed` 筛选）
+- `GET /api/tickets/:id` - 获取工单详情（带权限检查，返回 ticket + statusLogs + assignmentLogs）
+- `POST /api/tickets` - 创建工单（住户）
+- `POST /api/tickets/:id/assign` - 派工（调度员/管理员）
+- `POST /api/tickets/:id/reassign` - 改派（调度员/管理员）
+- `POST /api/tickets/:id/complete` - 标记完工待复核（调度员/管理员）
+- `POST /api/tickets/:id/close` - 复核关闭（管理员）
 - `GET /api/tickets/:id/status-logs` - 获取状态变更日志
 - `GET /api/tickets/:id/assignment-logs` - 获取派工历史
 
 ### 配置接口（管理员）
-- `GET/POST/PUT/DELETE /api/config/repair-types` - 维修类型 CRUD
-- `GET/POST/PUT/DELETE /api/config/technicians` - 技工 CRUD
-- `GET/POST/PUT/DELETE /api/config/shifts` - 班次 CRUD
-- `GET /api/config/check-conflict` - 检查技工时间冲突
+- `GET/POST /api/config/repair-types` - 维修类型 列表/创建
+- `PUT/DELETE /api/config/repair-types/:id` - 维修类型 更新/删除
+- `GET/POST /api/config/technicians` - 技工 列表/创建
+- `PUT/DELETE /api/config/technicians/:id` - 技工 更新/删除
+- `GET /api/config/technicians/:id/conflict?startTime=...&endTime=...&excludeTicketId=...` - 检查技工时间冲突
+- `GET/POST /api/config/shifts` - 班次 列表/创建
+- `PUT/DELETE /api/config/shifts/:id` - 班次 更新/删除
 
 ### 报表接口（管理员）
 - `GET /api/reports/export?status=xxx` - 按状态导出 CSV 报表
