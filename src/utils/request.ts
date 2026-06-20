@@ -67,17 +67,33 @@ export const request = async <T = unknown>(
   }
 };
 
-export const downloadFile = async (url: string, params?: Record<string, unknown>): Promise<void> => {
+export const downloadFile = async (url: string, params?: Record<string, unknown>, method: string = 'GET'): Promise<void> => {
   const token = useAuthStore.getState().token;
-  const queryString = params
-    ? '?' + new URLSearchParams(params as Record<string, string>).toString()
-    : '';
 
-  const response = await fetch(`${BASE_URL}${url}${queryString}`, {
+  let fetchUrl = `${BASE_URL}${url}`;
+  let fetchOptions: RequestInit = {
     headers: {
       'Authorization': `Bearer ${token}`,
     },
-  });
+  };
+
+  if (method === 'POST') {
+    fetchOptions = {
+      ...fetchOptions,
+      method: 'POST',
+    };
+  } else {
+    const queryString = params
+      ? '?' + new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined && v !== null && v !== '')
+            .reduce<Record<string, string>>((acc, [k, v]) => { acc[k] = String(v); return acc; }, {})
+        ).toString()
+      : '';
+    fetchUrl = `${BASE_URL}${url}${queryString}`;
+  }
+
+  const response = await fetch(fetchUrl, fetchOptions);
 
   if (!response.ok) {
     const data = await response.json() as ApiResponse;

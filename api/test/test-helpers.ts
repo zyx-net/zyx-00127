@@ -143,6 +143,20 @@ export const createTables = async (db: sqlite3.Database): Promise<void> => {
       FOREIGN KEY (operator_id) REFERENCES users(id)
     )
   `);
+
+  await r(`
+    CREATE TABLE export_histories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      status VARCHAR(20),
+      start_date VARCHAR(20),
+      end_date VARCHAR(20),
+      filename VARCHAR(255) NOT NULL,
+      operator_id INTEGER NOT NULL,
+      operator_name VARCHAR(100) NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (operator_id) REFERENCES users(id)
+    )
+  `);
 };
 
 export const seedTestData = async (db: sqlite3.Database): Promise<{

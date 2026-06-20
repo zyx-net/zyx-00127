@@ -130,6 +130,17 @@ export interface AssignTicketRequest {
   reason: string;
 }
 
+export interface ExportHistory {
+  id: number;
+  status: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  filename: string;
+  operatorId: number;
+  operatorName: string;
+  createdAt: string;
+}
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;

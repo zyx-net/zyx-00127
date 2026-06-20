@@ -2,7 +2,7 @@ import { request, downloadFile } from '../utils/request';
 import {
   LoginRequest, LoginResponse, Ticket, CreateTicketRequest,
   AssignTicketRequest, RepairType, Technician, Shift,
-  StatusLog, AssignmentLog
+  StatusLog, AssignmentLog, ExportHistory
 } from '../../shared/types';
 
 export const authApi = {
@@ -109,6 +109,12 @@ export const configApi = {
 };
 
 export const reportApi = {
-  export: (status?: string, startDate?: string, endDate?: string) =>
-    downloadFile('/reports/export', { status, startDate, endDate }),
+  export: (status?: string, startDate?: string, endDate?: string, dateRangeType?: string) =>
+    downloadFile('/reports/export', { status, startDate, endDate, dateRangeType }),
+  getExportHistories: () =>
+    request<ExportHistory[]>('/reports/export-histories'),
+  reExport: (id: number) =>
+    downloadFile(`/reports/export-histories/${id}/re-export`, {}, 'POST'),
+  downloadExport: (id: number) =>
+    downloadFile(`/reports/export-histories/${id}/download`, {}),
 };

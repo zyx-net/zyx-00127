@@ -12,6 +12,8 @@ import {
   Modal,
   Popconfirm,
   DatePicker,
+  Radio,
+  Tag,
   message,
 } from 'antd';
 import {
@@ -23,6 +25,8 @@ import {
   UserOutlined,
   CalendarOutlined,
   FileTextOutlined,
+  RedoOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { configApi, reportApi } from '../api';
@@ -30,6 +34,8 @@ import {
   RepairType,
   Technician,
   Shift,
+  ExportHistory,
+  TICKET_STATUS_LABELS,
 } from '../../shared/types';
 
 const { Title, Text } = Typography;
@@ -62,9 +68,12 @@ export const Admin: React.FC = () => {
   }>();
 
   const [exportStatus, setExportStatus] = useState<string>('all');
+  const [exportDateRangeType, setExportDateRangeType] = useState<string>('all');
   const [exportDateRange, setExportDateRange] = useState<
     [dayjs.Dayjs | null, dayjs.Dayjs | null] | null
   >(null);
+  const [exportHistories, setExportHistories] = useState<ExportHistory[]>([]);
+  const [exportHistoriesLoading, setExportHistoriesLoading] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -84,6 +93,12 @@ export const Admin: React.FC = () => {
 
   useEffect(() => {
     loadData();
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab === 'reports') {
+      loadExportHistories();
+    }
   }, [activeTab]);
 
   const openRepairTypeModal = (item?: RepairType) => {
@@ -217,16 +232,73 @@ export const Admin: React.FC = () => {
     }
   };
 
-  const handleExport = async () => {
+  const loadExportHistories = async () => {
+    setExportHistoriesLoading(true);
     try {
-      await reportApi.export(
-        exportStatus,
-        exportDateRange?.[0]?.format('YYYY-MM-DD'),
-        exportDateRange?.[1]?.format('YYYY-MM-DD')
-      );
-      message.success('导出成功');
+      const histories = await reportApi.getExportHistories();
+      setExportHistories(histories);
     } catch {
       // Error handled
+    } finally {
+      setExportHistoriesLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    if (exportDateRangeType === 'custom') {
+      if (!exportDateRange || !exportDateRange[0] || !exportDateRange[1]) {
+        message.error('自定义范围需要选择开始和结束日期');
+        return;
+      }
+      if (exportDateRange[0].isAfter(exportDateRange[1])) {
+        message.error('结束日期不能早于开始日期');
+        return;
+      }
+    }
+
+    try {
+      const startDate = exportDateRangeType === 'custom' ? exportDateRange?.[0]?.format('YYYY-MM-DD') : undefined;
+      const endDate = exportDateRangeType === 'custom' ? exportDateRange?.[1]?.format('YYYY-MM-DD') : undefined;
+
+      await reportApi.export(
+        exportStatus,
+        startDate,
+        endDate,
+        exportDateRangeType
+      );
+      message.success('导出成功');
+      loadExportHistories();
+    } catch {
+      // Error handled
+    }
+  };
+
+  const handleReExport = async (record: ExportHistory) => {
+    try {
+      await reportApi.reExport(record.id);
+      message.success('重新导出成功');
+      loadExportHistories();
+    } catch {
+      // Error handled
+    }
+  };
+
+  const handleDownloadExport = async (record: ExportHistory) => {
+    try {
+      await reportApi.downloadExport(record.id);
+    } catch {
+      // Error handled
+    }
+  };
+
+  const applyHistoryConditions = (record: ExportHistory) => {
+    setExportStatus(record.status || 'all');
+    if (record.startDate && record.endDate) {
+      setExportDateRangeType('custom');
+      setExportDateRange([dayjs(record.startDate), dayjs(record.endDate)]);
+    } else {
+      setExportDateRangeType('all');
+      setExportDateRange(null);
     }
   };
 
@@ -557,7 +629,7 @@ export const Admin: React.FC = () => {
             <Card
               size="small"
               title="导出条件"
-              style={{ maxWidth: 600 }}
+              style={{ maxWidth: 600, marginBottom: 24 }}
             >
               <Space direction="vertical" style={{ width: '100%' }} size="large">
                 <div>
@@ -578,12 +650,27 @@ export const Admin: React.FC = () => {
                 </div>
                 <div>
                   <Text style={{ marginBottom: 8, display: 'block' }}>创建时间范围</Text>
-                  <RangePicker
-                    value={exportDateRange}
-                    onChange={setExportDateRange}
-                    style={{ width: '100%' }}
-                    format="YYYY-MM-DD"
-                  />
+                  <Radio.Group
+                    value={exportDateRangeType}
+                    onChange={(e) => {
+                      setExportDateRangeType(e.target.value);
+                      if (e.target.value === 'all') {
+                        setExportDateRange(null);
+                      }
+                    }}
+                    style={{ marginBottom: 8 }}
+                  >
+                    <Radio value="all">全部时间</Radio>
+                    <Radio value="custom">自定义范围</Radio>
+                  </Radio.Group>
+                  {exportDateRangeType === 'custom' && (
+                    <RangePicker
+                      value={exportDateRange}
+                      onChange={setExportDateRange}
+                      style={{ width: '100%' }}
+                      format="YYYY-MM-DD"
+                    />
+                  )}
                 </div>
                 <Button
                   type="primary"
@@ -599,6 +686,99 @@ export const Admin: React.FC = () => {
                   导出 CSV 报表
                 </Button>
               </Space>
+            </Card>
+
+            <Card
+              size="small"
+              title={
+                <span>
+                  <HistoryOutlined style={{ marginRight: 8 }} />
+                  最近导出
+                </span>
+              }
+              extra={
+                <Button size="small" onClick={loadExportHistories}>
+                  刷新
+                </Button>
+              }
+            >
+              <Table
+                rowKey="id"
+                columns={[
+                  {
+                    title: '导出时间',
+                    dataIndex: 'createdAt',
+                    width: 170,
+                    render: (t: string) => dayjs(t).format('YYYY-MM-DD HH:mm:ss'),
+                  },
+                  {
+                    title: '状态筛选',
+                    dataIndex: 'status',
+                    width: 100,
+                    render: (s: string | null) => s ? (
+                      <Tag color="blue">{TICKET_STATUS_LABELS[s as keyof typeof TICKET_STATUS_LABELS] || s}</Tag>
+                    ) : <Tag>全部</Tag>,
+                  },
+                  {
+                    title: '日期范围',
+                    width: 180,
+                    render: (_: unknown, record: ExportHistory) => {
+                      if (record.startDate && record.endDate) {
+                        return `${record.startDate} ~ ${record.endDate}`;
+                      }
+                      return '全部时间';
+                    },
+                  },
+                  {
+                    title: '导出人',
+                    dataIndex: 'operatorName',
+                    width: 100,
+                  },
+                  {
+                    title: '文件名',
+                    dataIndex: 'filename',
+                    ellipsis: true,
+                    render: (f: string) => (
+                      <Text style={{ fontSize: 12 }}>{f}</Text>
+                    ),
+                  },
+                  {
+                    title: '操作',
+                    width: 200,
+                    render: (_: unknown, record: ExportHistory) => (
+                      <Space>
+                        <Button
+                          type="link"
+                          size="small"
+                          icon={<DownloadOutlined />}
+                          onClick={() => handleDownloadExport(record)}
+                        >
+                          下载
+                        </Button>
+                        <Button
+                          type="link"
+                          size="small"
+                          icon={<RedoOutlined />}
+                          onClick={() => handleReExport(record)}
+                        >
+                          重新导出
+                        </Button>
+                        <Button
+                          type="link"
+                          size="small"
+                          onClick={() => applyHistoryConditions(record)}
+                        >
+                          复用条件
+                        </Button>
+                      </Space>
+                    ),
+                  },
+                ]}
+                dataSource={exportHistories}
+                loading={exportHistoriesLoading}
+                pagination={{ pageSize: 5, showSizeChanger: false }}
+                size="small"
+              />
             </Card>
           </div>
         )}

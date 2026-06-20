@@ -136,6 +136,20 @@ const createTables = async (): Promise<void> => {
     )
   `);
 
+  await runAsync(`
+    CREATE TABLE IF NOT EXISTS export_histories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      status VARCHAR(20),
+      start_date VARCHAR(20),
+      end_date VARCHAR(20),
+      filename VARCHAR(255) NOT NULL,
+      operator_id INTEGER NOT NULL,
+      operator_name VARCHAR(100) NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (operator_id) REFERENCES users(id)
+    )
+  `);
+
   await runAsync('CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status)');
   await runAsync('CREATE INDEX IF NOT EXISTS idx_tickets_resident ON tickets(resident_id)');
   await runAsync('CREATE INDEX IF NOT EXISTS idx_tickets_technician ON tickets(current_technician_id)');
