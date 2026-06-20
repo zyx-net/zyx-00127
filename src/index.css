@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  line-height: 1.5;
+  font-weight: 400;
+  background-color: #f5f7fa;
+  color: #333;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.ant-layout {
+  min-height: 100vh;
+}
+
+.ant-menu-dark.ant-menu-inline .ant-menu-item-selected {
+  background: rgba(59, 130, 246, 0.2) !important;
+}
+
+.ant-btn-primary {
+  background: linear-gradient(135deg, #1e3a5f, #3b82f6);
+  border: none;
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(135deg, #2d5a87, #2563eb) !important;
+}
+
+.ant-card {
+  border-radius: 12px;
+}
+
+.ant-table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.status-tag-pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.status-tag-assigned {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #60a5fa;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.status-tag-reassigned {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fb923c;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.status-tag-completed {
+  background: #ede9fe;
+  color: #6b21a8;
+  border: 1px solid #a78bfa;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.status-tag-closed {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #34d399;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
