@@ -2,7 +2,8 @@ import { request, downloadFile } from '../utils/request';
 import {
   LoginRequest, LoginResponse, Ticket, CreateTicketRequest,
   AssignTicketRequest, RepairType, Technician, Shift,
-  StatusLog, AssignmentLog, ExportHistory
+  StatusLog, AssignmentLog, ExportHistory, ExportScheme,
+  SchemeOperationLog, CreateSchemeRequest, UpdateSchemeRequest
 } from '../../shared/types';
 
 export const authApi = {
@@ -109,12 +110,50 @@ export const configApi = {
 };
 
 export const reportApi = {
-  export: (status?: string, startDate?: string, endDate?: string, dateRangeType?: string) =>
-    downloadFile('/reports/export', { status, startDate, endDate, dateRangeType }),
+  export: (status?: string, startDate?: string, endDate?: string, dateRangeType?: string, schemeId?: number) => {
+    const params: Record<string, string | undefined> = { status, startDate, endDate, dateRangeType };
+    if (schemeId !== undefined) {
+      params.schemeId = String(schemeId);
+    }
+    return downloadFile('/reports/export', params);
+  },
   getExportHistories: () =>
     request<ExportHistory[]>('/reports/export-histories'),
   reExport: (id: number) =>
     downloadFile(`/reports/export-histories/${id}/re-export`, {}, 'POST'),
   downloadExport: (id: number) =>
     downloadFile(`/reports/export-histories/${id}/download`, {}),
+  getSchemes: () =>
+    request<ExportScheme[]>('/reports/schemes'),
+  getDefaultScheme: () =>
+    request<ExportScheme | null>('/reports/schemes/default'),
+  getScheme: (id: number) =>
+    request<ExportScheme>(`/reports/schemes/${id}`),
+  createScheme: (data: CreateSchemeRequest) =>
+    request<ExportScheme>('/reports/schemes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateScheme: (id: number, data: UpdateSchemeRequest) =>
+    request<ExportScheme>(`/reports/schemes/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  setDefaultScheme: (id: number) =>
+    request<ExportScheme>(`/reports/schemes/${id}/default`, {
+      method: 'POST',
+    }),
+  copyScheme: (id: number, newName: string) =>
+    request<ExportScheme>(`/reports/schemes/${id}/copy`, {
+      method: 'POST',
+      body: JSON.stringify({ newName }),
+    }),
+  deleteScheme: (id: number, force?: boolean) =>
+    request<void>(`/reports/schemes/${id}${force ? '?force=true' : ''}`, {
+      method: 'DELETE',
+    }),
+  getSchemeLogs: (id?: number) => {
+    const url = id !== undefined ? `/reports/schemes/${id}/logs` : '/reports/scheme-logs';
+    return request<SchemeOperationLog[]>(url);
+  },
 };

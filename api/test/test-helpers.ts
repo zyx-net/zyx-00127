@@ -157,6 +157,43 @@ export const createTables = async (db: sqlite3.Database): Promise<void> => {
       FOREIGN KEY (operator_id) REFERENCES users(id)
     )
   `);
+
+  await r(`
+    CREATE TABLE export_schemes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name VARCHAR(100) NOT NULL,
+      description TEXT,
+      status VARCHAR(20),
+      start_date VARCHAR(20),
+      end_date VARCHAR(20),
+      date_range_type VARCHAR(20) NOT NULL DEFAULT 'all',
+      is_default INTEGER NOT NULL DEFAULT 0 CHECK (is_default IN (0, 1)),
+      owner_id INTEGER NOT NULL,
+      owner_name VARCHAR(100) NOT NULL,
+      version INTEGER NOT NULL DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (owner_id) REFERENCES users(id)
+    )
+  `);
+
+  await r(`
+    CREATE TABLE scheme_operation_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      scheme_id INTEGER,
+      scheme_name VARCHAR(100),
+      operation VARCHAR(50) NOT NULL,
+      operator_id INTEGER NOT NULL,
+      operator_name VARCHAR(100) NOT NULL,
+      detail TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (scheme_id) REFERENCES export_schemes(id) ON DELETE SET NULL,
+      FOREIGN KEY (operator_id) REFERENCES users(id)
+    )
+  `);
+
+  await r('CREATE UNIQUE INDEX IF NOT EXISTS idx_export_schemes_name_owner ON export_schemes(name, owner_id)');
+  await r('CREATE INDEX IF NOT EXISTS idx_export_schemes_default ON export_schemes(is_default, owner_id)');
 };
 
 export const seedTestData = async (db: sqlite3.Database): Promise<{

@@ -7,8 +7,17 @@ import fs from 'fs';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DATA_DIR = path.join(__dirname, '..', '..', '..', 'data');
-const DB_PATH = path.join(DATA_DIR, 'app.db');
+const defaultDataDir = path.join(__dirname, '..', '..', '..', 'data');
+
+let DATA_DIR: string;
+let DB_PATH: string;
+if (process.env.DB_PATH_OVERRIDE) {
+  DB_PATH = process.env.DB_PATH_OVERRIDE;
+  DATA_DIR = path.dirname(DB_PATH);
+} else {
+  DATA_DIR = defaultDataDir;
+  DB_PATH = path.join(DATA_DIR, 'app.db');
+}
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -150,12 +159,50 @@ const createTables = async (): Promise<void> => {
     )
   `);
 
+  await runAsync(`
+    CREATE TABLE IF NOT EXISTS export_schemes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name VARCHAR(100) NOT NULL,
+      description TEXT,
+      status VARCHAR(20),
+      start_date VARCHAR(20),
+      end_date VARCHAR(20),
+      date_range_type VARCHAR(20) NOT NULL DEFAULT 'all',
+      is_default INTEGER NOT NULL DEFAULT 0 CHECK (is_default IN (0, 1)),
+      owner_id INTEGER NOT NULL,
+      owner_name VARCHAR(100) NOT NULL,
+      version INTEGER NOT NULL DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (owner_id) REFERENCES users(id)
+    )
+  `);
+
+  await runAsync(`
+    CREATE TABLE IF NOT EXISTS scheme_operation_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      scheme_id INTEGER,
+      scheme_name VARCHAR(100),
+      operation VARCHAR(50) NOT NULL,
+      operator_id INTEGER NOT NULL,
+      operator_name VARCHAR(100) NOT NULL,
+      detail TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (scheme_id) REFERENCES export_schemes(id) ON DELETE SET NULL,
+      FOREIGN KEY (operator_id) REFERENCES users(id)
+    )
+  `);
+
   await runAsync('CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status)');
   await runAsync('CREATE INDEX IF NOT EXISTS idx_tickets_resident ON tickets(resident_id)');
   await runAsync('CREATE INDEX IF NOT EXISTS idx_tickets_technician ON tickets(current_technician_id)');
   await runAsync('CREATE INDEX IF NOT EXISTS idx_status_logs_ticket ON status_logs(ticket_id)');
   await runAsync('CREATE INDEX IF NOT EXISTS idx_assignment_logs_ticket ON assignment_logs(ticket_id)');
   await runAsync('CREATE INDEX IF NOT EXISTS idx_shifts_technician ON shifts(technician_id)');
+  await runAsync('CREATE UNIQUE INDEX IF NOT EXISTS idx_export_schemes_name_owner ON export_schemes(name, owner_id)');
+  await runAsync('CREATE INDEX IF NOT EXISTS idx_export_schemes_default ON export_schemes(is_default, owner_id)');
+  await runAsync('CREATE INDEX IF NOT EXISTS idx_scheme_logs_scheme ON scheme_operation_logs(scheme_id)');
+  await runAsync('CREATE INDEX IF NOT EXISTS idx_scheme_logs_operator ON scheme_operation_logs(operator_id)');
 };
 
 const insertSeedData = async (): Promise<void> => {

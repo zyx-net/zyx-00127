@@ -141,9 +141,62 @@ export interface ExportHistory {
   createdAt: string;
 }
 
+export interface ExportScheme {
+  id: number;
+  name: string;
+  description: string | null;
+  status: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  dateRangeType: string;
+  isDefault: boolean;
+  ownerId: number;
+  ownerName: string;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SchemeOperationLog {
+  id: number;
+  schemeId: number | null;
+  schemeName: string | null;
+  operation: string;
+  operatorId: number;
+  operatorName: string;
+  detail: string | null;
+  createdAt: string;
+}
+
+export interface CreateSchemeRequest {
+  name: string;
+  description?: string;
+  status?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  dateRangeType: string;
+  overwrite?: boolean;
+}
+
+export interface UpdateSchemeRequest {
+  name?: string;
+  description?: string;
+  status?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  dateRangeType?: string;
+  expectedVersion?: number;
+}
+
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
   error?: string;
+  conflict?: boolean;
+  conflictInfo?: {
+    type: 'duplicate_name' | 'version_mismatch' | 'delete_default';
+    existingId?: number;
+    serverVersion?: number;
+  };
 }
