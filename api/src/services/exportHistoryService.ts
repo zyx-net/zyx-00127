@@ -100,9 +100,22 @@ export const getExportHistoryById = async (id: number): Promise<ExportHistory | 
 
 export const saveExportFile = (filename: string, content: string): string => {
   ensureExportsDir();
-  const filePath = path.join(EXPORTS_DIR, filename);
+  let finalFilename = filename;
+  let filePath = path.join(EXPORTS_DIR, finalFilename);
+
+  if (fs.existsSync(filePath)) {
+    const ext = path.extname(filename);
+    const base = path.basename(filename, ext);
+    let counter = 1;
+    while (fs.existsSync(filePath)) {
+      finalFilename = `${base}_${counter}${ext}`;
+      filePath = path.join(EXPORTS_DIR, finalFilename);
+      counter++;
+    }
+  }
+
   fs.writeFileSync(filePath, content, 'utf-8');
-  return filePath;
+  return finalFilename;
 };
 
 export const getExportFilePath = (filename: string): string | null => {

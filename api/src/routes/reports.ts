@@ -32,22 +32,23 @@ router.get('/export', async (req: AuthRequest, res: Response) => {
     }
 
     const csv = await exportTickets(status, startDate, endDate);
-    const filename = `维修工单报表_${dayjs().format('YYYYMMDD_HHmmss')}.csv`;
-    const encodedFilename = encodeURIComponent(filename);
+    const filename = `维修工单报表_${dayjs().format('YYYYMMDD_HHmmss_SSS')}.csv`;
 
+    let finalFilename = filename;
     if (req.user) {
-      saveExportFile(filename, csv);
+      finalFilename = saveExportFile(filename, csv);
 
       await createExportHistory(
         status || null,
         startDate || null,
         endDate || null,
-        filename,
+        finalFilename,
         req.user.id,
         req.user.name
       );
     }
 
+    const encodedFilename = encodeURIComponent(finalFilename);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${encodedFilename}"; filename*=UTF-8''${encodedFilename}`);
     res.send(csv);
@@ -83,22 +84,23 @@ router.post('/export-histories/:id/re-export', async (req: AuthRequest, res: Res
       history.endDate || undefined
     );
 
-    const filename = `维修工单报表_${dayjs().format('YYYYMMDD_HHmmss')}.csv`;
-    const encodedFilename = encodeURIComponent(filename);
+    const filename = `维修工单报表_${dayjs().format('YYYYMMDD_HHmmss_SSS')}.csv`;
 
+    let finalFilename = filename;
     if (req.user) {
-      saveExportFile(filename, csv);
+      finalFilename = saveExportFile(filename, csv);
 
       await createExportHistory(
         history.status,
         history.startDate,
         history.endDate,
-        filename,
+        finalFilename,
         req.user.id,
         req.user.name
       );
     }
 
+    const encodedFilename = encodeURIComponent(finalFilename);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${encodedFilename}"; filename*=UTF-8''${encodedFilename}`);
     res.send(csv);

@@ -34,8 +34,11 @@ export const exportTickets = async (status?: string, startDate?: string, endDate
     params.push(startDate);
   }
   if (endDate) {
+    const endBoundary = /^\d{4}-\d{2}-\d{2}$/.test(endDate)
+      ? `${endDate} 23:59:59`
+      : endDate;
     sql += ' AND t.created_at <= ?';
-    params.push(endDate);
+    params.push(endBoundary);
   }
 
   sql += ' ORDER BY t.created_at DESC';
